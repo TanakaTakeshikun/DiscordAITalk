@@ -15,7 +15,7 @@
   *   voicevox: {
   *     host: string, // VoiceVox のホスト名
   *     TextSize: number, // VoiceVox の生成テキストの最大文字数
-  *     speaker: number // VoiceVox の発話者番号
+  *     speaker: number // VoiceVox の話者ID
   *   },
   *   discord: {
   *     token: string // Discord ボットのトークン
