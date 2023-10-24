@@ -1,4 +1,33 @@
-//setting
+/**
+ * @constant setting
+ * @type {{
+*   rec: {
+  *     SampleRate: number, // 録音のサンプリングレート (Hz)
+  *     ByteRate: number, // 録音のバイトレート (bps)
+  *     MinDataSize: number, // 録音の最小サイズ (byte)
+  *     duration: number // 録音の最大時間 (ms)
+  *   },
+  *   google: {
+  *     keyfile: string, // Google Cloud Platform のキーファイルパス
+  *     projectId: string, // Google Cloud Platform のプロジェクト ID
+  *     MinText: number // Google Speech-to-Text の最小認識テキストの長さ
+  *   },
+  *   voicevox: {
+  *     host: string, // VoiceVox のホスト名
+  *     TextSize: number, // VoiceVox の生成テキストの最大文字数
+  *     speaker: number // VoiceVox の発話者番号
+  *   },
+  *   discord: {
+  *     token: string // Discord ボットのトークン
+  *   },
+  *   OpenAi: {
+  *     ApiKey: string, // OpenAI の API キー
+  *     MaxToken: number, // OpenAI の生成テキストの最大文字数
+  *     SystemPrompt: string // AIのキャラ設定
+  *   }
+  * }}
+  * @description 設定値。
+  */
 const setting = {
   rec: {
     SampleRate: 16000,
@@ -19,8 +48,10 @@ const setting = {
   discord: {
     token: 'Your Discord Bot Token'
   },
-  BingAi: {
-    cookie: 'Your Cookie _U here'
+  OpenAi: {
+    ApiKey: 'Your OpenAI ApiKey',
+    MaxToken: 500,
+    SystemPrompt: '小さな女の子'
   }
 };
 
@@ -31,7 +62,7 @@ const { createAudioResource, getVoiceConnection, joinVoiceChannel, createAudioPl
 const WavConverter = require('wav-converter');
 const speech = require('@google-cloud/speech');
 const axios = require('axios');
-const { ChatBot, conversation_style } = require('bingai-js');
+const OpenAI = require('openai');
 const DiscordClient = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates], rest: 60000
 });
@@ -44,9 +75,10 @@ const GoogleClient = new speech.SpeechClient({
   projectId: setting.google.ProjectId,
   keyFilename: setting.google.KeyFileName
 });
-//BingAiApi設定
-const BingAiApi = new ChatBot(setting.BingAi.cookie);
-
+//OpenAiApi設定
+const OpenAiApi = new OpenAI({
+  apiKey: setting.OpenAi.ApiKey
+});
 
 //functions
 /**
@@ -122,34 +154,35 @@ const GoogleSTT = async WavData => {
 };
 
 /**
- * @function BingAi
- * @description Bing AI Chatbotを使用して、テキストを生成します
+ * @function OpenAi
+ * @description OpenAIを使用して、テキストを生成します
  * @param {string} transcript 入力テキスト
  * @returns {Promise<string>} 生成されたテキスト
  *
  * @example
  * const transcript = '今日はいい天気ですね。';
- * const text = await BingAi(transcript);
+ * const text = await OpenAi(transcript);
  *
- * @see BingAiApi.init
- * @see BingAiApi.ask
+ * @see OpenAiApi.chat.completions.create
  * @see setting.voicevox.TextSize
- * @see exception_word
  */
-const BingAi = async transcript => {
-  await BingAiApi.init();
-  const result = await BingAiApi.ask(`指示:日本語小さな女の子のように会話を返答してください。\n自己紹介はしないでそのまま回答してください。\n質問:${transcript}`, conversation_style.creative);
+const OpenAi = async transcript => {
+  const ChatCompletion = await OpenAiApi.chat.completions.create({
+    model: 'gpt-3.5-turbo',
+    max_tokens: setting.OpenAi.MaxToken,
+    messages: [{ role: 'system', content: setting.OpenAi.SystemPrompt }, { role: 'user', content: `指示：必ず日本語で回答をしてください。\n内容:${transcript}` }],
+  });
+  const result = ChatCompletion?.choices[0]?.message?.content;
+  if (!result) return;
   const text = result.slice(0, setting.voicevox.TextSize);
-  const exception_word = ['My mistake, I can’t give a response to t', 'Sorry! That’s on me, I can’t give a resp', 'Hmm…let’s try a different topic. Sorry a'];
-  if (exception_word.includes(text.slice(0, 40))) return;
-  return text;
+  return `${text}`;
 };
 
 /**
  * @function ReadData
- * @description VoiceVoxを使用して、テキストを音声に変換します。
- * @param {string} text 変換するテキスト。
- * @returns {Promise<Stream>} 変換された音声のストリーム。
+ * @description VoiceVoxを使用して、テキストを音声に変換します
+ * @param {string} text 変換するテキスト
+ * @returns {Promise<Stream>} 変換された音声のストリーム
  *
  * @example
  * const text = '今日はいい天気ですね。';
@@ -218,25 +251,25 @@ DiscordClient.on('interactionCreate', async interaction => {
         //dicord(RecordingDataProcessing)
         if (waiting || !stream[0] || player.state.status === 'playing') return;
         waiting = true;
-        console.log("録音データ処理開始");
+        console.log('録音データ処理開始');
         const WavData = await RecordingDataProcessing(stream);
         if (!WavData) return StopProcess('音声データ処理中断');
-        console.log("録音データ処理完了");
+        console.log('録音データ処理完了');
         //GoogleSTT (voice=>text)
-        console.log("文字化開始");
+        console.log('文字化開始');
         const transcription = await GoogleSTT(WavData);
         if (!transcription) return StopProcess('文字化中断');
-        console.log("文字化完了");
+        console.log('文字化完了');
         //BingAi(text=>text)
         console.log('回答生成開始');
-        const text = await BingAi(transcription);
+        const text = await OpenAi(transcription);
         if (!text) return StopProcess('回答生成中断');
         console.log('回答生成完了');
         //VOICEVOX(text=>wavbase64)
-        console.log("音声合成開始");
+        console.log('音声合成開始');
         const AudioData = await ReadData(text);
         if (!AudioData) return StopProcess('音声合成中断');
-        console.log("音声合成完了");
+        console.log('音声合成完了');
         //discord(speak)
         const VoiceChannel = getVoiceConnection(interaction.guildId);
         if (!VoiceChannel) return waiting = false;
