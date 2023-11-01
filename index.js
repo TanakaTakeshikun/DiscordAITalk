@@ -80,7 +80,6 @@ const OpenAiApi = new OpenAI({
   apiKey: setting.OpenAi.ApiKey
 });
 
-//functions
 /**
  * @function DecodeOpus
  * @description Opus ストリームを PCM データに変換します

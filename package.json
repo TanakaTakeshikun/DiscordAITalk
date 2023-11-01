@@ -8,5 +8,33 @@
     "openai": "^4.13.0",
     "tweetnacl": "^1.0.3",
     "wav-converter": "^1.0.0"
-  }
+  },
+  "name": "discordaitalk",
+  "description": "<h1 align=\"center\">\r   <br>\r   <a href=\"https://github.com/TanakaTakeshikun/DiscordAITalk\"><img src=\"https://camo.qiitausercontent.com/8219b8c8b304b3d92a7687497ee9c80720dcf832/68747470733a2f2f71696974612d696d6167652d73746f72652e73332e61702d6e6f727468656173742d312e616d617a6f6e6177732e636f6d2f302f333531383939352f61343966306130652d343266322d356565302d653531612d6363346431383432323634322e706e67\" alt=\"DiscordAITalk\"></a>\r   <br>\r   Red Discord Bot\r   <br>\r </h1>",
+  "version": "1.0.0",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TanakaTakeshikun/DiscordAITalk.git"
+  },
+  "keywords": [
+    "Discord",
+    "AI",
+    "ChatGPT",
+    "CGP",
+    "Voice",
+    "Discord.js",
+    "Bot",
+    "STT"
+  ],
+  "author": "TanakaTakeshikun",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TanakaTakeshikun/DiscordAITalk/issues"
+  },
+  "homepage": "https://github.com/TanakaTakeshikun/DiscordAITalk#readme"
 }
