@@ -15,10 +15,9 @@ https://qiita.com/TanakaTakeshikun/items/141ab84b91f33d21f03c
 そこで、タイトルにある通りDiscordでAI(ChatGPT)とボイスチャンネルでずんだもんの音声で会話できるBOTを作ってみようと思います。
 GCPやOpenAIのAPIは無料枠があるので今回の記事では基本無料で出来るものとなっています。
 
-:::note alert
 無料枠を超える場合は利用料金が発生するのでご注意ください。
 また、バージョンにより、この記事とは違う部分が出てくるかもしれませんので、ご注意ください。
-:::
+
 
 # 使用技術
 今回は僕の得意なJSを使用して書きたいと思います。
@@ -30,9 +29,9 @@ GCPのKeyFile発行やDiscordのTokenの発行、ChatGPTのKeyの発行方法は
 また、VOICEVOXをダウンロードする必要があります。以下のサイトからダウンロードを行ってください。
 + [VOICEVOX WebSite](https://voicevox.hiroshiba.jp/)
 
-:::note warn
+
 VOICEVOXが起動していない場合、APIにアクセスができず、音声合成に失敗します。
-:::
+
 
 # アーキテクチャ図
 ![image.png](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/3518995/a49f0a0e-42f2-5ee0-e51a-cc4d18422642.png)
@@ -60,10 +59,10 @@ VOICEVOXが起動していない場合、APIにアクセスができず、音声
 ```shell
 npm install Discord.js@19.2.0 @discordjs/opus@0.9.0 @discordjs/voice@0.16.0 @google-cloud/speech@6.0.2 axios@1.5.1 openai@4.13.0 tweetnacl@1.0.3 wav-converter@1.0.0
 ```
-:::note info
+
 詳細・DockerfileはGitHubをご覧ください。
 [Repository](https://github.com/TanakaTakeshikun/DiscordAITalk)
-:::
+
 
 # 実際のコード
 
@@ -371,9 +370,8 @@ process.on('uncaughtException', error => {
 各設定、関数について解説していきます。
 知りたい箇所の関数名、変数名をクリックして詳細を確認してください。
 
-:::note warn
 詳しい返り値などはJSDOCで記述しているのでそちらをご覧ください。
-:::
+
 
 ## 設定の解説
 <details><summary>rec</summary>
@@ -486,9 +484,8 @@ const DecodeOpus = async OpusStream => {
 
 2chのOpus ストリーム1chで指定のbitrateでPCMデータに変換します。
 
-:::note alert
 この際、2chにしてしまうと、この後のSTTの処理の際に2chに対応していないので怒られます。
-:::
+
 
 
 </details>
@@ -513,9 +510,8 @@ const RecordingDataProcessing = async stream => {
 Discordの音声ストリーミングの際に発火するdataイベントで得られるchunkデータを配列にしたものを処理し、配列を結合します。
 その後、データサイズを比較して、指定したデータサイズ以下の場合は以降処理をしないようにします。
 
-:::note warn
 データサイズの指定を小さくすることで小さなデータでも処理されますがほとんどの場合、小さすぎるデータは雑音の場合が多いです。
-:::
+
 
 その後、WavConverterというPackageを使用し、1chで指定のサンプルレートとバイトレートでエンコードします。
 この際、レートが高いほうがこの後のSTTの認識が良いような気がします。(ただし、データサイズが大きくなります。)
@@ -549,11 +545,11 @@ GCPのSTT APIを利用し、LINEAR16形式で指定のサンプルレートで�
 この時に、指定した文字数以下の場合にはリソース、APIの使用回数削減のため以降処理をしないようにします。
 私は日本人なので`languageCode`はja-JPしていますが、ほかの言語使用者用に作成する場合は`languageCode`を変えれば認識するはずです。
 
-:::note warn
+
 STTは音声データの時間によって料金が変わります。詳しくはこちらをご覧ください。
 [Speech-to-Text の料金](https://cloud.google.com/speech-to-text/pricing?hl=ja)
 (テスト用で使用する場合は無料枠を超えることはないと思います。)
-:::
+
 
 使ってみて精度はなかなかいいと思います。
 
@@ -620,9 +616,9 @@ const StopProcess = async text => {
 処理が止めるときに呼び出す関数です。
 waitingをfalseにして、処理待ちを開放します。
 
-:::note warn
+
 trueの場合は新規の処理を停止している状態です。
-:::
+
 
 その後、consoleに止まった理由を表示します。
 
